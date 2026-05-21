@@ -25,10 +25,73 @@ try {
     throw "npm init failed with exit code $LASTEXITCODE"
   }
 
-  npm install "code-server@$Version" --omit=dev --no-audit --no-fund
+  npm install "code-server@$Version" --omit=dev --no-audit --no-fund --ignore-scripts
   if ($LASTEXITCODE -ne 0) {
     throw "npm install code-server@$Version failed with exit code $LASTEXITCODE"
   }
+
+  $VsCodeDir = Join-Path $Bundle "node_modules\code-server\lib\vscode"
+  Push-Location $VsCodeDir
+  try {
+    npm install --omit=dev --no-audit --no-fund --ignore-scripts
+    if ($LASTEXITCODE -ne 0) {
+      throw "npm install VS Code runtime dependencies failed with exit code $LASTEXITCODE"
+    }
+  } finally {
+    Pop-Location
+  }
+
+  $SpdlogIndex = Join-Path $VsCodeDir "node_modules\@vscode\spdlog\index.js"
+  @'
+exports.version = 'js-fallback';
+exports.setLevel = function () {};
+exports.setFlushOn = function () {};
+class Logger {
+  constructor() {}
+  trace() {}
+  debug() {}
+  info() {}
+  warn() {}
+  error() {}
+  critical() {}
+  flush() {}
+  drop() {}
+}
+exports.Logger = Logger;
+async function createLogger() {
+  return new Logger();
+}
+exports.createRotatingLogger = createLogger;
+exports.createAsyncRotatingLogger = createLogger;
+'@ | Set-Content -Path $SpdlogIndex -Encoding ASCII
+
+  $DeviceStorage = Join-Path $VsCodeDir "node_modules\@vscode\deviceid\dist\storage.js"
+  @'
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.setDeviceId = exports.getDeviceId = void 0;
+async function getDeviceId() {
+  return undefined;
+}
+exports.getDeviceId = getDeviceId;
+async function setDeviceId(_deviceId) {}
+exports.setDeviceId = setDeviceId;
+'@ | Set-Content -Path $DeviceStorage -Encoding ASCII
+
+  $WinRegistry = Join-Path $VsCodeDir "node_modules\@vscode\windows-registry\dist\index.js"
+  @'
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GetDWORDRegKey = exports.GetStringRegKey = void 0;
+function GetStringRegKey(_hive, _path, _name) {
+  return undefined;
+}
+exports.GetStringRegKey = GetStringRegKey;
+function GetDWORDRegKey(_hive, _path, _name) {
+  return undefined;
+}
+exports.GetDWORDRegKey = GetDWORDRegKey;
+'@ | Set-Content -Path $WinRegistry -Encoding ASCII
 
   $NodePath = (Get-Command node.exe).Source
   Copy-Item $NodePath (Join-Path $Bundle "node.exe") -Force
