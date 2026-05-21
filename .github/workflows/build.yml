@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.22.1
 
       - name: Setup Python 3.12 for node-gyp
         uses: actions/setup-python@v5
