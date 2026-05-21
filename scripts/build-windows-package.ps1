@@ -18,8 +18,21 @@ New-Item -ItemType Directory -Force $Logs | Out-Null
 
 Push-Location $Bundle
 try {
+  $PythonPath = (Get-Command python.exe).Source
+  npm config set python "$PythonPath"
+  if ($LASTEXITCODE -ne 0) {
+    throw "npm config set python failed with exit code $LASTEXITCODE"
+  }
+
   npm init -y | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    throw "npm init failed with exit code $LASTEXITCODE"
+  }
+
   npm install "code-server@$Version" --omit=dev --no-audit --no-fund
+  if ($LASTEXITCODE -ne 0) {
+    throw "npm install code-server@$Version failed with exit code $LASTEXITCODE"
+  }
 
   $NodePath = (Get-Command node.exe).Source
   Copy-Item $NodePath (Join-Path $Bundle "node.exe") -Force
