@@ -56,8 +56,13 @@ set PATH=%ROOT%;%PATH%
 
   $Stdout = Join-Path $Logs "stdout.txt"
   $Stderr = Join-Path $Logs "stderr.txt"
-  $Args = "/c `"`"$Bundle\start-code-server.cmd`" --bind-addr 127.0.0.1:$Port --auth none --disable-telemetry`""
-  $Proc = Start-Process -FilePath "cmd.exe" -ArgumentList $Args -PassThru -WindowStyle Hidden -RedirectStandardOutput $Stdout -RedirectStandardError $Stderr
+  $Proc = Start-Process `
+    -FilePath (Join-Path $Bundle "start-code-server.cmd") `
+    -ArgumentList @("--bind-addr", "127.0.0.1:$Port", "--auth", "none", "--disable-telemetry") `
+    -PassThru `
+    -WindowStyle Hidden `
+    -RedirectStandardOutput $Stdout `
+    -RedirectStandardError $Stderr
 
   try {
     $Status = $null
@@ -77,6 +82,14 @@ set PATH=%ROOT%;%PATH%
     }
 
     if ($Status -ne 200) {
+      if (Test-Path $Stdout) {
+        Write-Host "---- code-server stdout ----"
+        Get-Content $Stdout -ErrorAction SilentlyContinue
+      }
+      if (Test-Path $Stderr) {
+        Write-Host "---- code-server stderr ----"
+        Get-Content $Stderr -ErrorAction SilentlyContinue
+      }
       throw "Smoke test failed: expected HTTP 200 from 127.0.0.1:$Port, got $Status"
     }
 
