@@ -25,9 +25,19 @@ try {
     throw "npm init failed with exit code $LASTEXITCODE"
   }
 
-  npm install "code-server@$Version" --omit=dev --no-audit --no-fund
+  npm install "code-server@$Version" --omit=dev --no-audit --no-fund --ignore-scripts
   if ($LASTEXITCODE -ne 0) {
     throw "npm install code-server@$Version failed with exit code $LASTEXITCODE"
+  }
+
+  Push-Location (Join-Path $Bundle "node_modules\code-server\lib\vscode")
+  try {
+    npm install --omit=dev --no-audit --no-fund --ignore-scripts
+    if ($LASTEXITCODE -ne 0) {
+      throw "npm install VS Code runtime dependencies failed with exit code $LASTEXITCODE"
+    }
+  } finally {
+    Pop-Location
   }
 
   $NodePath = (Get-Command node.exe).Source
