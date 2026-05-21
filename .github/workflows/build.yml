@@ -1,0 +1,37 @@
+name: Build Windows native smoke package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      CODE_SERVER_VERSION: 4.117.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build and smoke test package
+        shell: pwsh
+        run: ./scripts/build-windows-package.ps1
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-server-windows-native-4.117.0
+          path: |
+            work/code-server-windows-native-4.117.0.zip
+            work/SHA256SUMS.txt
+          if-no-files-found: error
