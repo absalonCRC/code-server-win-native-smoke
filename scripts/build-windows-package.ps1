@@ -150,6 +150,7 @@ set PATH=%ROOT%;%PATH%
   } finally {
     if (-not $Proc.HasExited) {
       Stop-Process -Id $Proc.Id -Force
+      Wait-Process -Id $Proc.Id -Timeout 15 -ErrorAction SilentlyContinue
     }
   }
 } finally {
