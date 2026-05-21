@@ -10,7 +10,7 @@ $RepoRoot = Resolve-Path "$PSScriptRoot\.."
 $Work = Join-Path $RepoRoot "work"
 $BundleName = "code-server-windows-native-$Version"
 $Bundle = Join-Path $Work $BundleName
-$Logs = Join-Path $Bundle "smoke-logs"
+$Logs = Join-Path $Work "smoke-logs"
 
 Remove-Item -Recurse -Force $Work -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $Bundle | Out-Null
